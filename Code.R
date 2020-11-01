@@ -1,18 +1,19 @@
-              ###########################################################################
-              #                       INTERNATIONAL ECONOMICS : Homework 1              #                            
-              #                                 Exercise 2                              #
-              #                     Azizakhon, Tancrède, Victor, Xuan                   #
-              ###########################################################################
+###########################################################################
+#                       INTERNATIONAL ECONOMICS : Homework 1              #                            
+#                                 Exercise 2                              #
+#                     Azizakhon, Tancrède, Victor, Xuan                   #
+###########################################################################
 
 library(haven)
 library(tidyverse)
 library(broom)
-library(Metrics) 
+library(Metrics)
+library(stargazer)
 
 biltrade <- read_dta("/Users/tancredepolge/Documents/M2/M2S1/International/Trade HW/biltrade.dta")
 #View(biltrade)
 
-    #### QUESTION A ####
+#### QUESTION A ####
 
 ## Calculate FMP for 2016
 
@@ -25,6 +26,7 @@ biltrade2016$log_flow <- log(biltrade2016$flow)
 biltrade2016$log_dist <- log(biltrade2016$distw) 
 reg_1 <- lm(log_flow ~ log_dist + contig + iso_o + iso_d, data = biltrade2016, na.action = na.exclude)
 
+#stargazer(reg_1, type="latex", out="/Users/tancredepolge/Documents/M2/M2S1/International/Trade HW/Code Trade HW/TeX/reg1.tex")
 summary(reg_1)   ### Table 1
 sqrt(mean(reg_1$residuals^2)) # RMSE
 
@@ -68,15 +70,17 @@ biltrade2016_FMP$log_GDP <- log(biltrade2016_FMP$GDP)
 reg_2 <- lm(log_GDP ~ log_FMP, data = biltrade2016_FMP, na.action = na.exclude)
 
 summary(reg_2) # Table 2
+#stargazer(reg_2, type="latex", out="/Users/tancredepolge/Documents/M2/M2S1/International/Trade HW/Code Trade HW/TeX/reg2.tex")
 
-ggplot(biltrade2016_FMP, aes(log_FMP,log_GDP, label=iso_o)) +     #Fig 1 
-  geom_text(size=2) + 
-  stat_smooth(method = "lm", se = F, colour = "black") +
+fig_1 <- ggplot(biltrade2016_FMP, aes(log_FMP,log_GDP, label=iso_o)) +     #Fig 1 
+  geom_text(size=3) +
   xlab("Log Foreign Market Potential") + 
   ylab("Log GDP per capita") +
   ggtitle("GDP per capita and Foreign Market Potential")
   
-
+#pdf(file = "/Users/tancredepolge/Documents/M2/M2S1/International/Trade HW/Code Trade HW/TeX/fig1.pdf", 8, 5)
+#print(fig_1)
+#dev.off() 
 
 
 

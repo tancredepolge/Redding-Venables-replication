@@ -10,7 +10,7 @@ library(broom)
 library(Metrics)
 library(stargazer)
 
-biltrade <- read_dta("/Users/tancredepolge/Documents/M2/M2S1/International/Trade HW/biltrade.dta")
+biltrade <- read_dta("./biltrade.dta")
 #View(biltrade)
 
 #### QUESTION A ####
@@ -21,14 +21,14 @@ biltrade2016 <- filter(biltrade, year == 2016)
 #View(biltrade2016)
 
 # Estimating coefs
-biltrade2016$flow[which(biltrade2016$flow==0)] = NA #Removes 0 before taking the log
+biltrade2016$flow[which(biltrade2016$flow==0)] = 1 #Removes 0 before taking logs. Consider that 0s correspond to rounded values rather than NAs (as in the paper)
 biltrade2016$log_flow <- log(biltrade2016$flow)
 biltrade2016$log_dist <- log(biltrade2016$distw) 
 reg_1 <- lm(log_flow ~ log_dist + contig + iso_o + iso_d, data = biltrade2016, na.action = na.exclude)
 
-#stargazer(reg_1, type="latex", out="/Users/tancredepolge/Documents/M2/M2S1/International/Trade HW/Code Trade HW/TeX/reg1.tex")
+#stargazer(reg_1, type="latex", out="/Users/tancredepolge/Documents/M2/M2S1/International/Trade HW/TeX/reg1.tex")
 summary(reg_1)   ### Table 1
-sqrt(mean(reg_1$residuals^2)) # RMSE
+RMSE_reg1 <- sqrt(mean(reg_1$residuals^2)) # RMSE
 
 # Extracting destination specific effects estimates (leaving aside standard errors here !!)
 
@@ -70,7 +70,7 @@ biltrade2016_FMP$log_GDP <- log(biltrade2016_FMP$GDP)
 reg_2 <- lm(log_GDP ~ log_FMP, data = biltrade2016_FMP, na.action = na.exclude)
 
 summary(reg_2) # Table 2
-#stargazer(reg_2, type="latex", out="/Users/tancredepolge/Documents/M2/M2S1/International/Trade HW/Code Trade HW/TeX/reg2.tex")
+#stargazer(reg_2, type="latex", out="/Users/tancredepolge/Documents/M2/M2S1/International/Trade HW/TeX/reg2.tex")
 
 fig_1 <- ggplot(biltrade2016_FMP, aes(log_FMP,log_GDP, label=iso_o)) +     #Fig 1 
   geom_text(size=3) +
@@ -78,7 +78,7 @@ fig_1 <- ggplot(biltrade2016_FMP, aes(log_FMP,log_GDP, label=iso_o)) +     #Fig 
   ylab("Log GDP per capita") +
   ggtitle("GDP per capita and Foreign Market Potential")
   
-#pdf(file = "/Users/tancredepolge/Documents/M2/M2S1/International/Trade HW/Code Trade HW/TeX/fig1.pdf", 8, 5)
+#pdf(file = "/Users/tancredepolge/Documents/M2/M2S1/International/Trade/Trade HW/TeX/fig1.pdf", 8, 5)
 #print(fig_1)
 #dev.off() 
 
@@ -98,7 +98,7 @@ for (i in 2004:2015) {
   #View(biltrade_i)
 
 # Estimating coefs
-  biltrade_i$flow[which(biltrade_i$flow==0)] = NA #Removes 0 before taking the log
+  biltrade_i$flow[which(biltrade_i$flow==0)] = 1 #Removes 0 before taking logs. Consider that 0s correspond to rounded values rather than NAs (as in the paper)
   biltrade_i$log_flow <- log(biltrade_i$flow)
   biltrade_i$log_dist <- log(biltrade_i$distw) 
   reg_1 <- lm(log_flow ~ log_dist + contig + iso_o + iso_d, data = biltrade_i, na.action = na.exclude)
@@ -140,19 +140,41 @@ for (i in 2004:2015) {
   cat("Year",i,"complete")
 }
 
-biltrade_all_FMP <- arrange(biltrade_all_FMP,year, iso_o )
+biltrade_all_FMP <- arrange(biltrade_all_FMP,iso_o , -year )
 #View(biltrade_all_FMP)
 
-## Regression of GDP per capita on FMP for 2004-2015
+## Computing log(GDP) per capita and log(FMP) for 2004-2016
 
 biltrade_all_FMP$FMP[which(biltrade_all_FMP$FMP==0)] = NA #Removes 0 before taking the log
 biltrade_all_FMP$GDP[which(biltrade_all_FMP$GDP==0)] = NA
-
 biltrade_all_FMP$log_FMP <- log(biltrade_all_FMP$FMP)
 biltrade_all_FMP$log_GDP <- log(biltrade_all_FMP$GDP) 
-reg_3 <- lm(log_GDP ~ log_FMP, data = biltrade_all_FMP, na.action = na.exclude)
 
-summary(reg_3)
+
+##  Adding covariates : 
+
+
+# Average of Doing Business Index across 2009-2016 period
+DB <- read.csv('./DB Index.csv')
+biltrade_all_FMP <- merge(biltrade_all_FMP, DB, by = 'iso_o')
+
+# Tax Haven status according to Oxfam 
+tax_haven <- read.csv('./Tax Haven.csv')
+biltrade_all_FMP <- merge(biltrade_all_FMP, tax_haven, by = 'iso_o')
+
+# Yearly average Brent price
+brent <- read.csv('./brent.csv')
+biltrade_all_FMP <- merge(biltrade_all_FMP, brent, by = 'year')
+
+
+## Regression GDP per captia on FMP with covariates
+
+reg_3a <- lm(log_GDP ~ log_FMP, data = biltrade_all_FMP, na.action = na.exclude)
+summary(reg_3a)
+reg_3b <- lm(log_GDP ~ log_FMP + average_DB + tax_haven + avg_brent_spot, data = biltrade_all_FMP, na.action = na.exclude)
+summary(reg_3b)
+#stargazer(reg_3a, reg_3b, type="latex", out="/Users/tancredepolge/Documents/M2/M2S1/International/Trade/Trade HW/TeX/reg3.tex")
+
 
 
 

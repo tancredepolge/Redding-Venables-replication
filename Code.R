@@ -167,14 +167,22 @@ brent <- read.csv('./brent.csv')
 biltrade_all_FMP <- merge(biltrade_all_FMP, brent, by = 'year')
 
 
-## Regression GDP per captia on FMP with covariates
+## Regression GDP per captia on FMP with Fixed Effects
 
-reg_3a <- lm(log_GDP ~ log_FMP, data = biltrade_all_FMP, na.action = na.exclude)
+reg_3a <- lm(log_GDP ~ log_FMP, data = biltrade_all_FMP, na.action = na.exclude)    #Simple regression
 summary(reg_3a)
-reg_3b <- lm(log_GDP ~ log_FMP + average_DB + tax_haven + avg_brent_spot, data = biltrade_all_FMP, na.action = na.exclude)
+reg_3b <- lm(log_GDP ~ log_FMP + year, data = biltrade_all_FMP, na.action = na.exclude)   #Regression with year FEs
 summary(reg_3b)
-#stargazer(reg_3a, reg_3b, type="latex", out="/Users/tancredepolge/Documents/M2/M2S1/International/Trade/Trade HW/TeX/reg3.tex")
+reg_3c <- lm(log_GDP ~ log_FMP + iso_o , data = biltrade_all_FMP, na.action = na.exclude)    #Regression with country of origin FEs
+summary(reg_3c)
+reg_3d <- lm(log_GDP ~ log_FMP + iso_o + year, data = biltrade_all_FMP, na.action = na.exclude)    #Regression with country of origin and year FEs
+summary(reg_3d)
+#stargazer(reg_3a, reg_3b, reg_3c, reg_3d, type="latex", out="/Users/tancredepolge/Documents/M2/M2S1/International/Trade/Trade HW/TeX/reg3.tex")
 
 
+## Regression GDP per captia on FMP with covariates
+reg_4 <- lm(log_GDP ~ log_FMP + average_DB + tax_haven + avg_brent_spot, data = biltrade_all_FMP, na.action = na.exclude)  #Regression with covariates
+summary(reg_4)
+#stargazer(reg_4, type="latex", out="/Users/tancredepolge/Documents/M2/M2S1/International/Trade/Trade HW/TeX/reg4.tex")
 
 
